@@ -77,8 +77,9 @@ MORE :
 TOKEN :
 {
 	< PRINT: "print" > |
-	< INPUT: "input" >
-
+	< INPUT: "input" > |
+    < TRUE: "true">    |
+    < FALSE: "false">
 	// À compléter au besoin
 }
 
@@ -110,8 +111,10 @@ TOKEN :
 	< SEMICOLON: ";" > |
 	< COMMA: "," > |
 	< #AND: "&&" > |
-	< #OR: "||" >
+	< #OR: "||" > |
 	// À compléter au besoin
+	< DO: "do"> |
+	< WHILE: "while">
 }
 
 
@@ -123,7 +126,7 @@ TOKEN :
 	< #DIGIT: ["0"-"9"] > |
 	< INTEGER: ["1"-"9"] (["0"-"9"])* | "0" > |
 	//TODO: Caution! Allows numbers such as "0000.23"... to fix!!!
-	< REAL: (<INTEGER>)+ "." (["0"-"9"])+ (<EXPONENT>)? |
+	< REAL:  (<INTEGER>) "." (["0"-"9"])+ (<EXPONENT>)? |
     			  (<INTEGER>)+ <EXPONENT> > |
     < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
 }
@@ -153,7 +156,7 @@ void Block() : { }
 // à finir -- commencez ici!
 void AssignStmt() : { }
 {
-    Identifier()
+    Identifier() <ASSIGN> Expr()
 }
 
 void Expr() : {}
@@ -170,7 +173,7 @@ void IntLogicExpr() : { }
 {
     IntBasicExpr() (LOOKAHEAD(2)
          <LOGIC> IntBasicExpr()
-    )*
+    )* (LOOKAHEAD(2) <COMPARE> IntBasicExpr())?
 }
 
 void IntBasicExpr() : { }
@@ -187,4 +190,14 @@ void Identifier() : { }
 void IntValue() : { }
 {
 	<INTEGER>
+}
+
+void WhileStmt() : { }
+{
+    <WHILE> <LPAREN> Expr() <RPAREN> (Stmt() | <LACC> Block() <RACC> )
+}
+
+void DoWhileStmt() : { }
+{
+    <DO> <LACC> Block() <RACC> <WHILE> <RPAREN> Expr() <LPAREN> <SEMICOLON> 
 }
