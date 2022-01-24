@@ -110,8 +110,13 @@ TOKEN :
 	< SEMICOLON: ";" > |
 	< COMMA: "," > |
 	< #AND: "&&" > |
-	< #OR: "||" >
-	// À compléter au besoin
+	< #OR: "||" > |
+
+	<IF: "if"> |
+	<ELSE: "else"> |
+	<WHILE: "while"> |
+	<FOR: "for"> |
+	<SWITCH: "switch" >
 }
 
 
@@ -187,4 +192,19 @@ void Identifier() : { }
 void IntValue() : { }
 {
 	<INTEGER>
+}
+
+void IfStmt() : { }
+{
+    <IF> <LPAREN> Expr() <RPAREN> (Stmt() | <LACC> Block() <RACC>)
+}
+
+void ElseStmt() : { }
+{
+    <ELSE> (<LACC> Block() <RACC> | IfStmt() )
+}
+
+void ForStmt() : { }
+{
+    <FOR> <LPAREN> AssignStmt() <SEMICOLON> Expr() <SEMICOLON> AssignStmt() <RPAREN> (<LACC> Block() <RACC> | Stmt() )
 }
