@@ -207,12 +207,7 @@ void RealValue() : { }
 
 void IfStmt() : { }
 {
-    <IF> <LPAREN> Expr() <RPAREN> (Stmt() | <LACC> Block() <RACC>)
-}
-
-void ElseStmt() : { }
-{
-    <ELSE> (<LACC> Block() <RACC> | IfStmt() )
+    <IF> <LPAREN> Expr() <RPAREN> (Stmt() | <LACC> Block() <RACC>) (LOOKAHEAD(2) <ELSE> (LOOKAHEAD(2) <IF> <RPAREN> Expr() <LPAREN>)? (<LACC> Block() <RACC> | Stmt()) )*
 }
 
 void ForStmt() : { }
