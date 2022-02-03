@@ -207,7 +207,7 @@ void RealValue() : { }
 
 void IfStmt() : { }
 {
-    <IF> <LPAREN> Expr() <RPAREN> (Stmt() | <LACC> Block() <RACC>) (LOOKAHEAD(2) <ELSE> (LOOKAHEAD(2) <IF> <RPAREN> Expr() <LPAREN>)? (<LACC> Block() <RACC> | Stmt()) )*
+    <IF> ParenExpr() (Stmt() | <LACC> Block() <RACC>) (LOOKAHEAD(2) <ELSE> (LOOKAHEAD(2) <IF> <RPAREN> Expr() <LPAREN>)? (<LACC> Block() <RACC> | Stmt()) )*
 }
 
 void ForStmt() : { }
@@ -217,15 +217,50 @@ void ForStmt() : { }
 
 void WhileStmt() : { }
 {
-    <WHILE> <LPAREN> Expr() <RPAREN> (Stmt() | <LACC> Block() <RACC> )
+    <WHILE> ParenExpr() (Stmt() | <LACC> Block() <RACC> )
 }
 
 void DoWhileStmt() : { }
 {
-    <DO> <LACC> Block() <RACC> <WHILE> <LPAREN> Expr()<RPAREN> <SEMICOLON>
+    <DO> <LACC> Block() <RACC> <WHILE> ParenExpr() <SEMICOLON>
 }
 
 void SwitchStmt() : { }
 {
-    <SWITCH> <LPAREN> Expr() <RPAREN> <LACC> (<CASE> Expr() <COLON> Stmt())+ (<SWITCHDEFAULT> <COLON> Stmt())? <RACC>
+    <SWITCH> ParenExpr() <LACC> (<CASE> Expr() <COLON> Stmt())+ (<SWITCHDEFAULT> <COLON> Stmt())? <RACC>
+}
+
+// Priorité des opérations -----------------------
+void AddExpr() : { } {
+    <IDENTIFIER> <PLUS> <IDENTIFIER>
+}
+
+void SubExpr() : { } {
+    <IDENTIFIER> <MINUS> <IDENTIFIER>
+}
+
+void MulExpr() : { } {
+    <IDENTIFIER> <FOIS> <IDENTIFIER>
+}
+
+void DivExpr() : { } {
+    <IDENTIFIER> <DIV> <IDENTIFIER>
+}
+
+// Pas une expression si c'est juste <MINUS>
+// TODO: Changer le nom ou ajouter du contenue pour respecter le format expression
+void NegExpr() : { } {
+    <MINUS>
+}
+
+// Pas une expression si c'est juste <NOT>
+// TODO: Changer le nom ou ajouter du contenue pour respecter le format expression
+void NotExpr() : { } {
+    <NOT>
+}
+
+//  Compte comme une expression?
+// TODO: Assurer que c'est ok comme nom
+void ParenExpr() : { } {
+    <LPAREN> Expr() <RPAREN>
 }
