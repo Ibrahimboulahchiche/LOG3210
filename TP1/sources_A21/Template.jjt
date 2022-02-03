@@ -79,7 +79,8 @@ TOKEN :
 	< PRINT: "print" > |
 	< INPUT: "input" > |
     < TRUE: "true">    |
-    < FALSE: "false">
+    < FALSE: "false">  |
+    < RETURN: "return">
 	// À compléter au besoin
 }
 
@@ -120,9 +121,19 @@ TOKEN :
 	<CASE: "case" > |
 	<SWITCHDEFAULT : "default" > |
 	< DO: "do"> |
-	< WHILE: "while">
+	< WHILE: "while"> |
+
+	< ARROW: "->">
 }
 
+// Types
+TOKEN:
+{
+    < TYPES: < INT > | < FLOAT > | < BOOL > >|
+    < #INT: "int" > |
+    < #FLOAT: "float" > |
+    < #BOOL: "bool" >
+}
 
 // Identifiers and numbers
 TOKEN :
@@ -144,10 +155,9 @@ TOKEN :
 
 
 // à compléter
-void Stmt() : { }
+void Stmt()#void : { }
 {
 	AssignStmt() <SEMICOLON> | IfStmt() | ForStmt() | DoWhileStmt() | WhileStmt() | SwitchStmt()
-//	(IfStmt() ElseStmt())
 }
 
 ASTProgram Program() : { }
@@ -155,7 +165,7 @@ ASTProgram Program() : { }
 	Block() <EOF> { return jjtThis;  }
 }
 
-void Block() : { }
+void Block()#void : { }
 {
 	 (Stmt())+
 }
@@ -163,31 +173,61 @@ void Block() : { }
 // à finir -- commencez ici!
 void AssignStmt() : { }
 {
-    Identifier() <ASSIGN> Expr()
+    Identifier() <ASSIGN> (LOOKAHEAD(2)Expr() | LOOKAHEAD(2)AnonFunction())
 }
 
-void Expr() : {}
+void AnonFunction(): { }
+{
+    <LPAREN>
+    (<TYPES> Identifier()(<COMMA> <TYPES> Identifier())*)?
+    <RPAREN> <ARROW>
+    (<LACC> (Block())? <RETURN> Expr() <SEMICOLON> <RACC> | Stmt() )
+}
+
+void Expr()#void : {}
 {
     IntExpr()
 }
 
-void IntExpr() : { }
+void IntExpr()#void : { }
 {
     IntLogicExpr()
 }
 
-void IntLogicExpr() : { }
+// Priorité des opérations -----------------------
+void IntLogicExpr()#void : { }
 {
-    IntBasicExpr() (LOOKAHEAD(2)
-         <LOGIC> IntBasicExpr()
-    )*
+    (ComparExpr() (LOOKAHEAD(2) <LOGIC> ComparExpr())*) #AndOrExpr(>1)
 }
 
-void IntBasicExpr() : { }
+void ComparExpr()#void : { }
 {
-	Identifier() |
+    (AddExpr() (LOOKAHEAD(2) <COMPARE> AddExpr())*) #Comparison(>1)
+}
+
+void AddExpr()#void : { } {
+   (MulExpr() (LOOKAHEAD(2) (<PLUS> | <MINUS> ) MulExpr())*) #Addition(>1)
+}
+
+void MulExpr()#void : { } {
+    (NegExpr() (LOOKAHEAD(2) (<FOIS> | <DIV> ) NegExpr() )*) #Multiplication(>1)
+}
+
+void NegExpr()#void : { } {
+      ((<MINUS>)+ NotExpr())#Negative(>0) | NotExpr()
+}
+
+void NotExpr()#void : { } {
+    ((<NOT>)+ IntBasicExpr())#Not(>0) | IntBasicExpr()
+}
+
+void IntBasicExpr()#void : { }
+{
+	LOOKAHEAD(2) Identifier() |
 	IntValue() |
-	RealValue()
+	RealValue() |
+	LOOKAHEAD(2) <LPAREN> Expr() <RPAREN> |
+	BoolValue()
 }
 
 void Identifier() : { }
@@ -205,62 +245,37 @@ void RealValue() : { }
     <REAL>
 }
 
+void BoolValue() : { }
+{
+    <TRUE> | <FALSE>
+}
+
 void IfStmt() : { }
 {
-    <IF> ParenExpr() (Stmt() | <LACC> Block() <RACC>) (LOOKAHEAD(2) <ELSE> (LOOKAHEAD(2) <IF> <RPAREN> Expr() <LPAREN>)? (<LACC> Block() <RACC> | Stmt()) )*
+    <IF> <LPAREN> Expr() <RPAREN>
+    (Stmt() | <LACC> Block() <RACC>)
+    (
+        LOOKAHEAD(2) <ELSE> (LOOKAHEAD(2) <IF> <LPAREN> Expr() <RPAREN> )?
+        (<LACC> Block() <RACC> | Stmt())
+    )*
 }
 
 void ForStmt() : { }
 {
-    <FOR> <LPAREN> (AssignStmt())? <SEMICOLON> Expr() <SEMICOLON> (AssignStmt())? <RPAREN> (<LACC> Block() <RACC> | Stmt() )
+    <FOR> <LPAREN> (AssignStmt())? <SEMICOLON> (Expr())? <SEMICOLON> (AssignStmt())? <RPAREN> (<LACC> Block() <RACC> | Stmt() )
 }
 
 void WhileStmt() : { }
 {
-    <WHILE> ParenExpr() (Stmt() | <LACC> Block() <RACC> )
+    <WHILE> <LPAREN> Expr() <RPAREN> (Stmt() | <LACC> Block() <RACC> )
 }
 
 void DoWhileStmt() : { }
 {
-    <DO> <LACC> Block() <RACC> <WHILE> ParenExpr() <SEMICOLON>
+    <DO> <LACC> Block() <RACC> <WHILE> <LPAREN> Expr() <RPAREN> <SEMICOLON>
 }
 
 void SwitchStmt() : { }
 {
-    <SWITCH> ParenExpr() <LACC> (<CASE> Expr() <COLON> Stmt())+ (<SWITCHDEFAULT> <COLON> Stmt())? <RACC>
-}
-
-// Priorité des opérations -----------------------
-void AddExpr() : { } {
-    <IDENTIFIER> <PLUS> <IDENTIFIER>
-}
-
-void SubExpr() : { } {
-    <IDENTIFIER> <MINUS> <IDENTIFIER>
-}
-
-void MulExpr() : { } {
-    <IDENTIFIER> <FOIS> <IDENTIFIER>
-}
-
-void DivExpr() : { } {
-    <IDENTIFIER> <DIV> <IDENTIFIER>
-}
-
-// Pas une expression si c'est juste <MINUS>
-// TODO: Changer le nom ou ajouter du contenue pour respecter le format expression
-void NegExpr() : { } {
-    <MINUS>
-}
-
-// Pas une expression si c'est juste <NOT>
-// TODO: Changer le nom ou ajouter du contenue pour respecter le format expression
-void NotExpr() : { } {
-    <NOT>
-}
-
-//  Compte comme une expression?
-// TODO: Assurer que c'est ok comme nom
-void ParenExpr() : { } {
-    <LPAREN> Expr() <RPAREN>
+    <SWITCH> <LPAREN> Expr() <RPAREN> <LACC> (<CASE> Expr() <COLON> Stmt())+ (<SWITCHDEFAULT> <COLON> Stmt())? <RACC>
 }
