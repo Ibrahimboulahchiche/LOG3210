@@ -127,7 +127,6 @@ public class SemantiqueVisitor implements ParserVisitor {
 
     @Override
     public Object visit(ASTStmt node, Object data) {
-
         node.childrenAccept(this, data);
         return null;
     }
@@ -188,7 +187,16 @@ public class SemantiqueVisitor implements ParserVisitor {
     public Object visit(ASTAssignStmt node, Object data) {
         DataStruct ds = new DataStruct();
         String varName = ((ASTIdentifier) node.jjtGetChild(0)).getValue();
-        node.jjtGetChild(1).jjtAccept(this, ds);
+//        node.jjtGetChild(1).jjtAccept(this, ds);
+//        System.out.println(node.jjtGetChild(1).jjtGetNumChildren());
+        Node childNode = node.jjtGetChild(1);
+        int numChildren = childNode.jjtGetNumChildren();
+        while(numChildren != 0) {
+            System.out.println(childNode);
+            childNode = childNode.jjtGetChild(0);
+        }
+
+        System.out.println(ds.type);
 
         if (!symbolTable.containsKey(varName))
             throw new SemantiqueError("Invalid use of undefined Identifier " + varName);
