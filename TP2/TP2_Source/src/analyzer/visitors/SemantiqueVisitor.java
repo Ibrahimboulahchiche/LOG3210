@@ -8,6 +8,7 @@ import javax.xml.crypto.Data;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Vector;
 
 /**
  * Created: 19-01-10
@@ -223,6 +224,45 @@ public class SemantiqueVisitor implements ParserVisitor {
         les opérateurs == et != peuvent être utilisé pour les nombres, les réels et les booléens, mais il faut que le type soit le même
         des deux côté de l'égalité/l'inégalité.
         */
+
+        Vector<String> noneBoolOps = new Vector<>();
+        noneBoolOps.add("<");
+        noneBoolOps.add(">");
+        noneBoolOps.add("<=");
+        noneBoolOps.add(">=");
+
+        int numChildren = node.jjtGetNumChildren();
+        String compOp = node.getValue();
+
+        if (numChildren > 1){
+
+            Node child1 = node.jjtGetChild(0);
+            while (child1.jjtGetNumChildren() > 0) {
+                child1 = child1.jjtGetChild(0);
+            }
+            DataStruct ds1 = new DataStruct();
+            child1.jjtAccept(this, ds1);
+            VarType dsType1 = ds1.type;
+
+            Node child2 = node.jjtGetChild(1);
+            while (child2.jjtGetNumChildren() > 0) {
+                child2 = child2.jjtGetChild(0);
+            }
+            DataStruct ds2 = new DataStruct();
+            child2.jjtAccept(this, ds2);
+            VarType dsType2 = ds2.type;
+
+
+            if (dsType1 == VarType.bool && dsType2 == VarType.bool){
+                if (noneBoolOps.contains(compOp)){
+                    throw new SemantiqueError("Invalid type in expression");
+                }
+            } else if (dsType1 != dsType2){
+                throw new SemantiqueError("Invalid type in expression");
+            }
+
+            OP++;
+        }
         return null;
     }
 
