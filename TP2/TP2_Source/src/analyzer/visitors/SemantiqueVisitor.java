@@ -4,6 +4,7 @@ import analyzer.SemantiqueError;
 import analyzer.ast.*;
 
 import javax.lang.model.element.VariableElement;
+import javax.xml.crypto.Data;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -193,19 +194,14 @@ public class SemantiqueVisitor implements ParserVisitor {
         while (child.jjtGetNumChildren() > 0) {
             child = child.jjtGetChild(0);
         }
-//        System.out.println(child);
         child.jjtAccept(this, ds);
         VarType dsType = ds.type;
-//
-//        System.out.println(varType);
-//        System.out.println(dsType);
 
         if (!symbolTable.containsKey(varName))
             throw new SemantiqueError("Invalid use of undefined Identifier " + varName);
         else if(varType != dsType)
             throw new SemantiqueError("Invalid type in assignation of Identifier " + varName + "... was expecting " + varType + " but got " + dsType);
 
-//        node.childrenAccept(this, data);
         return null;
     }
 
@@ -274,12 +270,22 @@ public class SemantiqueVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTNotExpr node, Object data) {
         node.childrenAccept(this, data);
+        if(!node.getOps().isEmpty()){
+            if(((DataStruct)data).type != VarType.bool)
+                throw new SemantiqueError("Invalid type in expression");
+            OP++;
+        }
         return null;
     }
 
     @Override
     public Object visit(ASTUnaExpr node, Object data) {
         node.childrenAccept(this, data);
+        if(!node.getOps().isEmpty()){
+            if(((DataStruct)data).type != VarType.num)
+                throw new SemantiqueError("Invalid type in expression");
+            OP++;
+        }
         return null;
     }
 
@@ -305,7 +311,12 @@ public class SemantiqueVisitor implements ParserVisitor {
 
     @Override
     public Object visit(ASTIdentifier node, Object data) {
+        if (node.jjtGetParent() instanceof ASTGenValue) {
+            String varName = node.getValue();
+            VarType varType = symbolTable.get(varName);
 
+            ((DataStruct) data).type = varType;
+        }
         return null;
     }
 
