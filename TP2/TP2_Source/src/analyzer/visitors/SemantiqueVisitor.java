@@ -140,28 +140,29 @@ public class SemantiqueVisitor implements ParserVisitor {
 
     @Override
     public Object visit(ASTForEachStmt node, Object data) {
-        DataStruct ds = new DataStruct();
-        Node child = node.jjtGetChild(1);
-        while (child.jjtGetNumChildren() > 0) {
-            child = child.jjtGetChild(0);
-        }
-        child.jjtAccept(this, ds);
-        VarType dsType = ds.type;
-        VarType acceptedType = dsType;
 
-        if(dsType == VarType.listnum)
+        String leftOpType = ((ASTNormalDeclaration)node.jjtGetChild(0)).getValue();
+        String rightOperandName = ((ASTIdentifier)node.jjtGetChild(1)).getValue();
+
+        if (!symbolTable.containsKey(rightOperandName))
+            throw new SemantiqueError("Invalid use of undefined Identifier " + rightOperandName);
+
+        VarType rightOpType = symbolTable.get(rightOperandName);
+        VarType acceptedType;
+
+        if(rightOpType == VarType.listnum)
             acceptedType = VarType.num;
-        else if (dsType == VarType.listbool)
+        else if (rightOpType == VarType.listbool)
             acceptedType = VarType.bool;
-        else if (dsType == VarType.listreal)
+        else if (rightOpType == VarType.listreal)
             acceptedType = VarType.real;
+        else
+            throw new SemantiqueError("Array type is required here...");
 
         VarType leftOperandType = symbolTable.get(((ASTIdentifier) node.jjtGetChild(0).jjtGetChild(0)).getValue());
 
-        if(child instanceof ASTIdentifier && !symbolTable.containsKey(((ASTIdentifier) child).getValue()))
-            throw new SemantiqueError("Invalid use of undefined Identifier " + ((ASTIdentifier) child).getValue());
-        else if (leftOperandType != acceptedType)
-            throw new SemantiqueError("Array type " + dsType + " is incompatible with declared variable of type " + leftOperandType + "...");
+        if (leftOperandType != acceptedType)
+            throw new SemantiqueError("Array type " + rightOpType + " is incompatible with declared variable of type " + leftOpType + "...");
         FOR++;
         return null;
     }
