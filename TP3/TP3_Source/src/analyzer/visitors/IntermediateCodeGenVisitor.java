@@ -107,6 +107,7 @@ public class IntermediateCodeGenVisitor implements ParserVisitor {
 
     @Override
     public Object visit(ASTForStmt node, Object data) {
+
         node.childrenAccept(this, data);
         return null;
     }
@@ -301,10 +302,6 @@ public class IntermediateCodeGenVisitor implements ParserVisitor {
         }
         return null;
     }
-
-
-
-
 
     @Override
     public Object visit(ASTCompExpr node, Object data) {

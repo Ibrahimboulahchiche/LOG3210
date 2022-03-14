@@ -1,12 +1,10 @@
 a = 42
 _L1
-if b == 1 goto _L3
-goto _L4
-_L3
+ifFalse b == 1 goto _L3
 _t0 = a + 100
 a = _t0
 goto _L2
-_L4
+_L3
 _t1 = a - 100
 a = _t1
 _L2
