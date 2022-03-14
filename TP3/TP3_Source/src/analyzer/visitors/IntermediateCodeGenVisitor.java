@@ -9,6 +9,7 @@ import sun.awt.Symbol;
 import java.awt.*;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 
@@ -108,7 +109,18 @@ public class IntermediateCodeGenVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTForStmt node, Object data) {
 
-        node.childrenAccept(this, data);
+        node.jjtGetChild(0).jjtAccept(this, data);
+        String label = genLabel();
+        BoolLabel B = new BoolLabel (genLabel(), (String) data);
+
+        m_writer.println(label);
+
+        node.jjtGetChild(1).jjtAccept(this, B);
+        m_writer.println(B.lTrue);
+        node.jjtGetChild(3).jjtAccept(this, label);
+        node.jjtGetChild(2).jjtAccept(this, B);
+
+        m_writer.println("goto " + label);
         return null;
     }
 
@@ -195,42 +207,21 @@ public class IntermediateCodeGenVisitor implements ParserVisitor {
      */
     public Object codeExtAddMul(SimpleNode node, Object data, Vector<String> ops) {
 
-        String op = " " + ops.firstElement() + " ";
-        String addr = "";
-        String tmp = "";
+        String id = "";
+        String printString = "";
 
         for (int i = 0; i < node.jjtGetNumChildren(); i++) {
             if(i % 2 ==0) {
-                addr = genId();
+                id = genId();
                 String res = node.jjtGetChild(i).jjtAccept(this,data).toString();
-                tmp += addr + " = " + res;
+                printString += id + " = " + res;
             } else {
-                tmp += op + node.jjtGetChild(i).jjtAccept(this, data).toString();
-                m_writer.println(tmp);
-                tmp = "";
+                printString += " " + ops.get(0) + " " + node.jjtGetChild(i).jjtAccept(this, data).toString();
+                m_writer.println(printString);
+                printString = "";
             }
         }
-        return addr;
-
-
-
-
-//        String printString = "";
-//        String id = "";
-//
-//        for (int i = 0; i < node.jjtGetNumChildren(); i++) {
-//            String addr = node.jjtGetChild(i).jjtAccept(this, data).toString();
-//            if(i % 2 == 0) {
-//                id = genId();
-//                printString += id + " = " + addr ;
-//            } else {
-//                printString += " " + ops.get(0) + " " + addr;
-//                m_writer.println(printString);
-//                printString = "";
-//            }
-//
-//        }
-//        return id;
+        return id;
     }
 
     @Override
@@ -351,7 +342,6 @@ public class IntermediateCodeGenVisitor implements ParserVisitor {
             else
                 m_writer.println("goto " + B.lFalse);
         }
-//        return node.getValue().toString();
         return null;
     }
 
@@ -380,14 +370,35 @@ public class IntermediateCodeGenVisitor implements ParserVisitor {
 
     @Override
     public Object visit(ASTSwitchStmt node, Object data) {
-        for (int i = 0; i < node.jjtGetNumChildren(); i++) {
-            node.jjtGetChild(i).jjtAccept(this, data);
+
+        String testValue = node.jjtGetChild(0).jjtAccept(this, data).toString();
+        String test = genLabel();
+
+        m_writer.println("goto " + test);
+
+        String[] labels = new String[node.jjtGetNumChildren()];
+        String[] values = new String[node.jjtGetNumChildren()];
+
+        for (int i = 1; i < node.jjtGetNumChildren() ; i++) {
+            labels[i] = genLabel();
+            values[i] = node.jjtGetChild(i).jjtAccept(this, labels[i]).toString();
+            m_writer.println("goto " + data);
+        }
+
+        m_writer.println(test);
+
+        for (int i = 1; i < node.jjtGetNumChildren(); i++) {
+            if (node.jjtGetChild(i).toString() == "CaseStmt")
+                m_writer.println("if " + testValue + " == " + values[i] + " goto " + labels[i]);
+            else
+                m_writer.println("goto " + labels[i]);
         }
         return null;
     }
 
     @Override
     public Object visit(ASTCaseStmt node, Object data) {
+        m_writer.println((String) data);
         String caseValue = node.jjtGetChild(0).jjtAccept(this, data).toString();
         node.jjtGetChild(1).jjtAccept(this, data);
         return caseValue;
@@ -395,8 +406,8 @@ public class IntermediateCodeGenVisitor implements ParserVisitor {
 
     @Override
     public Object visit(ASTDefaultStmt node, Object data) {
-        node.jjtGetChild(0).jjtAccept(this, data);
-        return null;
+        m_writer.println((String) data);
+        return node.childrenAccept(this, data);
     }
 
     //des outils pour vous simplifier la vie et vous enligner dans le travail
