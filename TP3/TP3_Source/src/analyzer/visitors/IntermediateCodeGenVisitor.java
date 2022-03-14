@@ -117,21 +117,43 @@ public class IntermediateCodeGenVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTIfStmt node, Object data) {
 
-        if (node.jjtGetNumChildren() == 2) {
-//            BoolLabel B = (BoolLabel) data
-        }
-
-        for (int i = 0; i < node.jjtGetNumChildren(); i++) {
-            node.jjtGetChild(i).jjtAccept(this, data);
+        BoolLabel B = new BoolLabel(null, null);
+        switch(node.jjtGetNumChildren()){
+            //S → if(B)S1
+            case 2:
+                B.lTrue = genLabel();
+                B.lFalse = (String)data;
+                node.jjtGetChild(0).jjtAccept(this, B);
+                m_writer.println(B.lTrue);
+                node.jjtGetChild(1).jjtAccept(this, data);
+                break;
+            //S → if(B)S1elseS2
+            case 3:
+                B.lTrue = genLabel();
+                B.lFalse = genLabel();
+                node.jjtGetChild(0).jjtAccept(this, B);
+                m_writer.println(B.lTrue);
+                node.jjtGetChild(1).jjtAccept(this, data);
+                m_writer.println("goto " + data);
+                m_writer.println(B.lFalse);
+                node.jjtGetChild(2).jjtAccept(this, data);
+                break;
+            default:
+                break;
         }
         return null;
     }
 
     @Override
     public Object visit(ASTWhileStmt node, Object data) {
-        for (int i = 0; i < node.jjtGetNumChildren(); i++) {
-            node.jjtGetChild(i).jjtAccept(this, data);
-        }
+        //S → while(B)S1
+        String label = genLabel();
+        BoolLabel B = new BoolLabel(genLabel(), (String)data);
+        m_writer.println(label);
+        node.jjtGetChild(0).jjtAccept(this, B);
+        m_writer.println(B.lTrue);
+        node.jjtGetChild(1).jjtAccept(this, label);
+        m_writer.println("goto " + label);
         return null;
     }
 
