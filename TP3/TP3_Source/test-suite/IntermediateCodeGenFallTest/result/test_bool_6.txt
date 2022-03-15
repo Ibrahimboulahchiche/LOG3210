@@ -1,5 +1,5 @@
-_L3
 goto _L2
+_L3
 a = 1
 goto _L1
 _L2
