@@ -1,6 +1,7 @@
 package analyzer.visitors;
 
 import analyzer.ast.*;
+import com.sun.org.apache.xerces.internal.impl.xpath.XPath;
 
 import java.io.PrintWriter;
 import java.util.*;
@@ -78,6 +79,16 @@ public class LifeVariablesVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTStmt node, Object data) {
         // TODO: Définition des statements, cette fonction est importante pour l'identification des "step".
+        String step = genStep();
+        StepStatus ss = new StepStatus();
+        allSteps.put(step, ss);
+
+        for (String element:previous_step) {
+            allSteps.get(step).PRED.add(element);
+            allSteps.get(element).SUCC.add(step);
+        }
+        previous_step = new HashSet<>();
+        previous_step.add(step);
         node.childrenAccept(this, previous_step);
         return null;
     }
@@ -106,9 +117,12 @@ public class LifeVariablesVisitor implements ParserVisitor {
     @Override
     public Object visit(ASTAssignStmt node, Object data) {
         // TODO: vous avez le cas "DEF" ici... conseil: c'est ici qu'il faut faire ça ;)
-        for(int i=0; i < node.jjtGetNumChildren(); i++ ) {
-            node.jjtGetChild(i).jjtAccept(this,data);
-        }
+        String currentStep = "_step" + (step - 1);
+        allSteps.get(currentStep).DEF.add(((ASTIdentifier) node.jjtGetChild(0)).getValue());
+        current_ref_ids.clear();
+        node.jjtGetChild(1).jjtAccept(this, data);
+        allSteps.get(currentStep).REF = (HashSet<String>) current_ref_ids.clone();
+
         return null;
     }
 
@@ -154,9 +168,7 @@ public class LifeVariablesVisitor implements ParserVisitor {
     }
 
     @Override
-    public Object visit(ASTGenValue node, Object data) {
-        return node.jjtGetChild(0).jjtAccept(this, data);
-    }
+    public Object visit(ASTGenValue node, Object data) { return node.jjtGetChild(0).jjtAccept(this, data);}
 
     @Override
     public Object visit(ASTBoolValue node, Object data) {
@@ -168,7 +180,8 @@ public class LifeVariablesVisitor implements ParserVisitor {
     public Object visit(ASTIdentifier node, Object data) {
         // TODO: Ici on a accès au nom des variables
         node.childrenAccept(this, data);
-        return null;
+        current_ref_ids.add(node.getValue());
+        return node.getValue();
     }
 
     @Override
@@ -239,5 +252,32 @@ public class LifeVariablesVisitor implements ParserVisitor {
      */
     private void compute_IN_OUT() {
         // TODO
+
+//        for (node:allSteps) {
+//            IN[node] = {};
+//            OUT[node] = {};
+//
+//        }
+//
+//        //TODO: decider le type du array
+//        Vector<String> workList = new HashSet<>();
+//        workList.push(stop.node);
+//
+//        while(workList.size() > 0){
+//            node = worklist.pop();
+//
+//            for (succNode:allSteps.get(node).SUCC) {
+//                OUT[node] = OUT[node] && IN[succNode];
+//            }
+//
+//            OLD_IN = IN[node];
+//            IN[node] = (OUT[NODE] - DEF[node]) && REF[node];
+//
+//            if(IN[node] != OLD_IN){
+//                for (preNode:allSteps.get(node).PRED) {
+//                    workList.push(predNode);
+//                }
+//            }
+//        }
     }
 }
