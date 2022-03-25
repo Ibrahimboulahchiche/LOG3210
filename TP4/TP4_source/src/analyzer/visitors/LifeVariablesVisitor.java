@@ -253,31 +253,52 @@ public class LifeVariablesVisitor implements ParserVisitor {
     private void compute_IN_OUT() {
         // TODO
 
-//        for (node:allSteps) {
-//            IN[node] = {};
-//            OUT[node] = {};
-//
+//        forall ( node in nodeSet ) {
+//            IN [ node ] = {}
+//            OUT[ node ] = {}
 //        }
+        for (String node:allSteps.keySet()) {
+            allSteps.get(node).IN = new HashSet<>();
+            allSteps.get(node).OUT = new HashSet<>();
+
+        }
 //
-//        //TODO: decider le type du array
-//        Vector<String> workList = new HashSet<>();
-//        workList.push(stop.node);
-//
-//        while(workList.size() > 0){
-//            node = worklist.pop();
-//
-//            for (succNode:allSteps.get(node).SUCC) {
+       //TODO: decider le type du array
+        Stack<String> workStack = new Stack<>();
+        workStack.push("_step" + (step - 1));
+
+        while(workStack.size() > 0){
+            String node = workStack.pop();
+
+            for (String succNode:allSteps.get(node).SUCC) {
 //                OUT[node] = OUT[node] && IN[succNode];
-//            }
-//
+                allSteps.get(node).OUT.addAll(allSteps.get(succNode).IN);
+            }
+
 //            OLD_IN = IN[node];
+            HashSet<String> OLD_IN = (HashSet<String>) allSteps.get(node).IN.clone();
+
 //            IN[node] = (OUT[NODE] - DEF[node]) && REF[node];
+            HashSet<String> outClone = (HashSet<String>) allSteps.get(node).OUT.clone();
+            outClone.removeAll(allSteps.get(node).DEF);
+            outClone.addAll(allSteps.get(node).REF);
+
+            allSteps.get(node).IN = (HashSet<String>) outClone.clone();
+
+
 //
 //            if(IN[node] != OLD_IN){
 //                for (preNode:allSteps.get(node).PRED) {
 //                    workList.push(predNode);
 //                }
 //            }
-//        }
+
+            if(allSteps.get(node).IN != OLD_IN) {
+                for (String preNode:allSteps.get(node).PRED) {
+                    workStack.push(preNode);
+                }
+            }
+        }
+
     }
 }
