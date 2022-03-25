@@ -100,7 +100,28 @@ public class LifeVariablesVisitor implements ParserVisitor {
     public Object visit(ASTIfStmt node, Object data) {
         // TODO: Cas IfStmt.
         //  Attention au cas de "if cond stmt" (sans else) qui est la difficulté ici...
-        node.childrenAccept(this, data);
+        current_ref_ids.clear();
+        node.jjtGetChild(0).jjtAccept(this, data);
+        allSteps.get("_step" + (step - 1)).REF = (HashSet<String>) current_ref_ids.clone();
+
+        HashSet<String> savePrevStep = (HashSet<String>) previous_step.clone();
+        HashSet<String> ifStep;
+
+        // cas pour sans else
+        if(node.jjtGetNumChildren() == 2)
+            ifStep = (HashSet<String>) previous_step.clone();
+        else
+            ifStep = new HashSet<>();
+
+        for (int i = 1; i < node.jjtGetNumChildren(); i++) {
+           previous_step = (HashSet<String>) savePrevStep.clone();
+           node.jjtGetChild(i).jjtAccept(this, data);
+           for (String step : previous_step) {
+               ifStep.add(step);
+           }
+        }
+
+        previous_step = (HashSet<String>) ifStep.clone();
         return null;
     }
 
@@ -109,7 +130,25 @@ public class LifeVariablesVisitor implements ParserVisitor {
         // TODO: Cas WhileStmt.
         //  Attention au cas de la condition qui est la difficulté ici...
 
-        node.childrenAccept(this, data);
+        String currStep = "_step" + (step - 1);
+
+        current_ref_ids.clear();
+        node.jjtGetChild(0).jjtAccept(this, data);
+        allSteps.get(currStep).REF = (HashSet<String>) current_ref_ids.clone();
+
+        for (int i = 1; i < node.jjtGetNumChildren(); i++) {
+            node.jjtGetChild(i).jjtAccept(this, data);
+        }
+
+        allSteps.get(currStep).PRED.addAll(previous_step);
+        for (String e : allSteps.get(currStep).PRED) {
+            allSteps.get(e).SUCC.add(currStep);
+        }
+
+        HashSet<String> whileStep = new HashSet<>();
+        whileStep.add(currStep);
+        previous_step = (HashSet<String>) whileStep.clone();
+
         return null;
     }
 
@@ -293,12 +332,11 @@ public class LifeVariablesVisitor implements ParserVisitor {
 //                }
 //            }
 
-            if(allSteps.get(node).IN != OLD_IN) {
+            if(!allSteps.get(node).IN.equals(OLD_IN)) {
                 for (String preNode:allSteps.get(node).PRED) {
                     workStack.push(preNode);
                 }
             }
         }
-
     }
 }
