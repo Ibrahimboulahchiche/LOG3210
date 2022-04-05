@@ -1,0 +1,173 @@
+NUMBER_OF_REGISTER_AVAILABLE: 5
+
+LIVE --->
+
+NODE 1 IN:
+	a
+	b
+	c
+	d
+	i
+
+NODE 1 OUT:
+	a
+	b
+	c
+	d
+	i
+	t0
+
+NODE 2 IN:
+	a
+	b
+	c
+	d
+	i
+	t0
+
+NODE 2 OUT:
+	a
+	b
+	c
+	d
+	i
+	t1
+
+NODE 3 IN:
+	a
+	b
+	c
+	d
+	i
+	t1
+
+NODE 3 OUT:
+	a
+	b
+	c
+	d
+	i
+	t1
+	t2
+
+NODE 4 IN:
+	a
+	b
+	c
+	d
+	i
+	t1
+	t2
+
+NODE 4 OUT:
+	a
+	b
+	c
+	d
+	i
+	t3
+
+NODE 5 IN:
+	a
+	b
+	c
+	d
+	i
+	t3
+
+NODE 5 OUT:
+	a
+	b
+	c
+	d
+	t
+	i
+
+NODE 6 IN:
+	a
+	b
+	c
+	d
+	t
+	i
+
+NODE 6 OUT:
+	t4
+	a
+	c
+	t
+	d
+	i
+
+NODE 7 IN:
+	t4
+	a
+	c
+	t
+	d
+	i
+
+NODE 7 OUT:
+	t4
+	t5
+	c
+	t
+	d
+	i
+
+NODE 8 IN:
+	t4
+	t5
+	c
+	t
+	d
+	i
+
+NODE 8 OUT:
+	t6
+	c
+	t
+	d
+	i
+
+NODE 9 IN:
+	t6
+	c
+	t
+	d
+	i
+
+NODE 9 OUT:
+	a
+	c
+	t
+	d
+	i
+
+NODE 10 IN:
+	a
+	c
+	t
+	d
+	i
+
+NODE 10 OUT:
+	a
+	b
+	c
+	d
+	i
+
+<--- LIVE
+
+t0 = b + a
+t1 = d * t0
+t2 = c * b
+t3 = t1 + t2
+t = t3
+t4 = d * b
+t5 = c * a
+t6 = t4 + t5
+a = t6
+b = t
+

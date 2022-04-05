@@ -1,0 +1,184 @@
+NUMBER_OF_REGISTER_AVAILABLE: 3
+
+LIVE --->
+
+NODE 1 IN:
+	a
+	b
+	c
+	d
+	i
+
+NODE 1 OUT:
+	a
+	b
+	c
+	d
+	i
+	t0
+
+NODE 2 IN:
+	a
+	b
+	c
+	d
+	i
+	t0
+
+NODE 2 OUT:
+	a
+	b
+	c
+	d
+	i
+	t1
+
+NODE 3 IN:
+	a
+	b
+	c
+	d
+	i
+	t1
+
+NODE 3 OUT:
+	a
+	b
+	c
+	d
+	i
+	t2
+
+NODE 4 IN:
+	a
+	b
+	c
+	d
+	i
+	t2
+
+NODE 4 OUT:
+	a
+	b
+	c
+	d
+	t
+	i
+
+NODE 5 IN:
+	a
+	b
+	c
+	d
+	t
+	i
+
+NODE 5 OUT:
+	a
+	b
+	d
+	t
+	i
+	t3
+
+NODE 6 IN:
+	a
+	b
+	d
+	t
+	i
+	t3
+
+NODE 6 OUT:
+	t4
+	a
+	b
+	t
+	i
+	t3
+
+NODE 7 IN:
+	t4
+	a
+	b
+	t
+	i
+	t3
+
+NODE 7 OUT:
+	t5
+	a
+	b
+	t
+	i
+
+NODE 8 IN:
+	t5
+	a
+	b
+	t
+	i
+
+NODE 8 OUT:
+	a
+	b
+	c
+	t
+	i
+
+NODE 9 IN:
+	a
+	b
+	c
+	t
+	i
+
+NODE 9 OUT:
+	a
+	b
+	c
+	d
+	i
+
+NODE 10 IN:
+	a
+	b
+	c
+	d
+	i
+
+NODE 10 OUT:
+	a
+	t6
+	b
+	c
+	d
+
+NODE 11 IN:
+	a
+	t6
+	b
+	c
+	d
+
+NODE 11 OUT:
+	a
+	b
+	c
+	d
+	i
+
+<--- LIVE
+
+t0 = 2 * c
+t1 = t0 + d
+t2 = d * t1
+t = t2
+t3 = c * c
+t4 = d * d
+t5 = t3 + t4
+c = t5
+d = t
+t6 = i / 2
+i = t6
+
