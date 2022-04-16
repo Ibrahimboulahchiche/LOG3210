@@ -58,7 +58,7 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
             if(REGISTERS.get(i) != null){
                 //Verifier si le registre est modified
                 if(MODIFIED.contains(REGISTERS.get(i))){
-
+                    m_writer.println("ST" + REGISTERS.get(i) + ", R" + i);
                 }
 
                 //Verifier si le registre est temporaire
@@ -136,8 +136,16 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         String assigned = (String) node.jjtGetChild(0).jjtAccept(this, null);
         String left = (String) node.jjtGetChild(1).jjtAccept(this, null);
         String right = (String) node.jjtGetChild(2).jjtAccept(this, null);
+        String opName = OP.get(node.getOp());
 
         // TODO: Chaque variable a son emplacement en mémoire, mais si elle est déjà dans un registre, ne la rechargez pas!
+//        getReg(assigned, NODE, IN);
+        m_writer.println("LD " + getReg(right, NODE, IN) + ", " + right);
+        m_writer.println("LD " + getReg(left, NODE, IN) + ", " + left);
+        m_writer.println(opName + " " + getReg(assigned, NODE, IN) + ", " + getReg(left, NODE, IN) + ", " + getReg(right, NODE, IN));
+//        System.out.println(assigned);
+//        getReg(left, NODE, IN);
+//        m_writer.println(opName + " " + getReg(assigned, NODE, IN));
         // TODO: Si une variable n'est pas vive, ne l'enregistrez pas en mémoire.
         // TODO: Si vos registres sont pleins, déterminez quelle variable vous allez retirer et si vous devez la sauvegarder
         // TODO: Écrivez la traduction en code machine, une instruction intermédiaire peut générer plus qu'une instruction machine
@@ -199,8 +207,11 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
     
     public String getReg(String src, int node, ArrayList<Vector<String>> maybe_dead) {
         // TODO 1: if exists, get existing register and return
-        if (REGISTERS.contains(src)){
-            return "R" + REGISTERS.indexOf(src);
+        for (int i = 0; i < REGISTERS.size(); i++) {
+            if (REGISTERS.get(i).contains(src)) {
+                USE_QUEUE.add(REGISTERS.indexOf(src));
+                return "R" + i;
+            }
         }
 
         // TODO 2: if there is an empty register, put in empty register and return
@@ -220,6 +231,11 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         }
         // TODO 4: other register selection (ex: put in oldest register and return)
         //J'imagine qu'on va devoir utiliser USE_QUEUE pour vérifier le oldest
+        if (!REGISTERS.get(REGISTERS.size() - 1).isEmpty()) {
+            REGISTERS.set(USE_QUEUE.get(0), new Vector<String>());
+            REGISTERS.get(USE_QUEUE.get(0)).add(src);
+            USE_QUEUE.remove(0);
+        }
 
         return ""; // default for compilation, should not be in your code!!
     }
