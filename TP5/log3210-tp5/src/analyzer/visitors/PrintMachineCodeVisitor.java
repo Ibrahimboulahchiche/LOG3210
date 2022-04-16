@@ -140,8 +140,10 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
 
         // TODO: Chaque variable a son emplacement en mémoire, mais si elle est déjà dans un registre, ne la rechargez pas!
 //        getReg(assigned, NODE, IN);
-        m_writer.println("LD " + getReg(right, NODE, IN) + ", " + right);
-        m_writer.println("LD " + getReg(left, NODE, IN) + ", " + left);
+        if (right.charAt(0) != 't')
+            m_writer.println("LD " + getReg(right, NODE, IN) + ", " + right);
+        if (left.charAt(0) != 't')
+            m_writer.println("LD " + getReg(left, NODE, IN) + ", " + left);
         m_writer.println(opName + " " + getReg(assigned, NODE, IN) + ", " + getReg(left, NODE, IN) + ", " + getReg(right, NODE, IN));
 //        System.out.println(assigned);
 //        getReg(left, NODE, IN);
@@ -209,7 +211,10 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         // TODO 1: if exists, get existing register and return
         for (int i = 0; i < REGISTERS.size(); i++) {
             if (REGISTERS.get(i).contains(src)) {
-                USE_QUEUE.add(REGISTERS.indexOf(src));
+                if (USE_QUEUE.contains(i)) {
+                    USE_QUEUE.remove((Integer) i);
+                    USE_QUEUE.add(i);
+                }
                 return "R" + i;
             }
         }
@@ -218,6 +223,7 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         for (int i = 0; i < REGISTERS.size(); i++) {
             if(REGISTERS.get(i).isEmpty()){
                 REGISTERS.get(i).add(src);
+                USE_QUEUE.add(i);
                 return "R" + i;
             }
         }
@@ -225,6 +231,10 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         // TODO 3: if there if dead variables in registers, put in dead register and return
         for (int i = 0; i < REGISTERS.size(); i++) {
             if(maybe_dead.contains(REGISTERS.get(i))){
+                if (USE_QUEUE.contains(i)) {
+                    USE_QUEUE.remove((Integer) i);
+                    USE_QUEUE.add(i);
+                }
                 REGISTERS.get(i).add(src);
                 return "R" + i;
             }
@@ -234,6 +244,7 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         if (!REGISTERS.get(REGISTERS.size() - 1).isEmpty()) {
             REGISTERS.set(USE_QUEUE.get(0), new Vector<String>());
             REGISTERS.get(USE_QUEUE.get(0)).add(src);
+            USE_QUEUE.add(USE_QUEUE.get(0));
             USE_QUEUE.remove(0);
         }
 
