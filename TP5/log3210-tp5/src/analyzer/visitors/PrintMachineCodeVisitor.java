@@ -154,9 +154,9 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
 
         if (!MODIFIED.contains(assigned) /*&& assigned.charAt(0) != 't'*/) {
             MODIFIED.add(assigned);
-            if (right.charAt(0) != 't' && !rightAlreadyUsed)
+            if (right.charAt(0) != 't' && right.charAt(0) != '#' && !rightAlreadyUsed)
                 m_writer.println("LD " + getReg(right, NODE, IN) + ", " + right);
-            if (left.charAt(0) != 't' && !leftAlreadyUsed)
+            if (left.charAt(0) != 't' && left.charAt(0) != '#' && !leftAlreadyUsed)
                 m_writer.println("LD " + getReg(left, NODE, IN) + ", " + left);
             m_writer.println(opName + " " + getReg(assigned, NODE, IN) + ", " + getReg(left, NODE, IN) + ", " + getReg(right, NODE, IN));
 
@@ -229,6 +229,8 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
     }
     
     public String getReg(String src, int node, ArrayList<Vector<String>> maybe_dead) {
+        if (src.charAt(0) == '#')
+            return src;
         // TODO 1: if exists, get existing register and return
         for (int i = 0; i < REGISTERS.size(); i++) {
             if (REGISTERS.get(i).contains(src)) {
@@ -267,6 +269,7 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
             REGISTERS.get(USE_QUEUE.get(0)).add(src);
             USE_QUEUE.add(USE_QUEUE.get(0));
             USE_QUEUE.remove(0);
+            return "R" + USE_QUEUE.get(USE_QUEUE.size() - 1);
         }
 
         return ""; // default for compilation, should not be in your code!!
