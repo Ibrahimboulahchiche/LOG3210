@@ -1,6 +1,7 @@
 package analyzer.visitors;
 
 import analyzer.ast.*;
+import javafx.beans.binding.BooleanBinding;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -140,14 +141,27 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
 
         // TODO: Chaque variable a son emplacement en mémoire, mais si elle est déjà dans un registre, ne la rechargez pas!
 //        getReg(assigned, NODE, IN);
-        if (right.charAt(0) != 't')
+        boolean leftAlreadyUsed = false;
+        boolean rightAlreadyUsed = false;
+        for (int i = 0; i < USE_QUEUE.size(); i++) {
+            if (REGISTERS.get(i).contains(left)) {
+                leftAlreadyUsed = true;
+            }
+            if (REGISTERS.get(i).contains(right)) {
+                rightAlreadyUsed = true;
+            }
+        }
+        if (!MODIFIED.contains(assigned) && assigned.charAt(0) != 't') {
+            MODIFIED.add(assigned);
+        if (right.charAt(0) != 't' && !rightAlreadyUsed)
             m_writer.println("LD " + getReg(right, NODE, IN) + ", " + right);
-        if (left.charAt(0) != 't')
+        if (left.charAt(0) != 't' && !leftAlreadyUsed)
             m_writer.println("LD " + getReg(left, NODE, IN) + ", " + left);
         m_writer.println(opName + " " + getReg(assigned, NODE, IN) + ", " + getReg(left, NODE, IN) + ", " + getReg(right, NODE, IN));
-//        System.out.println(assigned);
-//        getReg(left, NODE, IN);
-//        m_writer.println(opName + " " + getReg(assigned, NODE, IN));
+
+//            m_writer.println("ST" + REGISTERS.get(i) + ", R" + i);
+//            m_writer.println("ST " + assigned + ", " + getReg(left, NODE, IN));
+        }
         // TODO: Si une variable n'est pas vive, ne l'enregistrez pas en mémoire.
         // TODO: Si vos registres sont pleins, déterminez quelle variable vous allez retirer et si vous devez la sauvegarder
         // TODO: Écrivez la traduction en code machine, une instruction intermédiaire peut générer plus qu'une instruction machine
