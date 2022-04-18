@@ -158,7 +158,11 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
                 m_writer.println("LD " + getReg(right, NODE, IN) + ", " + right);
             if (left.charAt(0) != 't' && left.charAt(0) != '#' && !leftAlreadyUsed)
                 m_writer.println("LD " + getReg(left, NODE, IN) + ", " + left);
+//            String regLeft = getReg(left, NODE, IN);
+//            String regRight = getReg(right, NODE, IN);
+//            String regAssigned = getReg(assigned, NODE, IN);
             m_writer.println(opName + " " + getReg(assigned, NODE, IN) + ", " + getReg(left, NODE, IN) + ", " + getReg(right, NODE, IN));
+//            m_writer.println(opName + " " + regAssigned + ", " + regLeft + ", " + regRight);
 
 //            m_writer.println("ST " + REGISTERS.get(i) + ", R" + i);
 //            m_writer.println("ST " + assigned + ", " + getReg(left, NODE, IN));
@@ -234,10 +238,10 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         // TODO 1: if exists, get existing register and return
         for (int i = 0; i < REGISTERS.size(); i++) {
             if (REGISTERS.get(i).contains(src)) {
-                if (USE_QUEUE.contains(i)) {
-                    USE_QUEUE.remove((Integer) i);
-                    USE_QUEUE.add(i);
-                }
+//                if (USE_QUEUE.contains(i)) {
+//                    USE_QUEUE.remove((Integer) i);
+//                    USE_QUEUE.add(i);
+//                }
                 return "R" + i;
             }
         }
@@ -246,6 +250,10 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         for (int i = 0; i < REGISTERS.size(); i++) {
             if(REGISTERS.get(i).isEmpty()){
                 REGISTERS.get(i).add(src);
+////                if (USE_QUEUE.contains(i)) {
+//                    USE_QUEUE.remove((Integer) i);
+//                    USE_QUEUE.add(i);
+//                }
                 USE_QUEUE.add(i);
                 return "R" + i;
             }
@@ -253,11 +261,20 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
 
         // TODO 3: if there if dead variables in registers, put in dead register and return
         for (int i = 0; i < REGISTERS.size(); i++) {
-            if(maybe_dead.contains(REGISTERS.get(i))){
+//            if(!OUT.contains(REGISTERS.get(i))){
+//                if (USE_QUEUE.contains(i)) {
+//                    USE_QUEUE.remove((Integer) i);
+//                    USE_QUEUE.add(i);
+//                }
+//                REGISTERS.get(i).add(src);
+//                return "R" + i;
+//            }
+            if(src.charAt(0) == 't' && !maybe_dead.get(NODE + 1).contains(REGISTERS.get(i).get(0))){
                 if (USE_QUEUE.contains(i)) {
                     USE_QUEUE.remove((Integer) i);
                     USE_QUEUE.add(i);
                 }
+                REGISTERS.set(i, new Vector<String>());
                 REGISTERS.get(i).add(src);
                 return "R" + i;
             }
@@ -265,11 +282,19 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         // TODO 4: other register selection (ex: put in oldest register and return)
         //J'imagine qu'on va devoir utiliser USE_QUEUE pour vérifier le oldest
         if (!REGISTERS.get(REGISTERS.size() - 1).isEmpty()) {
-            REGISTERS.set(USE_QUEUE.get(0), new Vector<String>());
-            REGISTERS.get(USE_QUEUE.get(0)).add(src);
-            USE_QUEUE.add(USE_QUEUE.get(0));
-            USE_QUEUE.remove(0);
-            return "R" + USE_QUEUE.get(USE_QUEUE.size() - 1);
+            for (int i = 0; i < REGISTERS.size(); i++) {
+                if (src.charAt(0) != 't') {
+                    REGISTERS.set(USE_QUEUE.get(i), new Vector<String>());
+                    REGISTERS.get(USE_QUEUE.get(i)).add(src);
+                    USE_QUEUE.add(USE_QUEUE.get(i));
+                    USE_QUEUE.remove(i);
+                }
+            }
+//            REGISTERS.set(USE_QUEUE.get(0), new Vector<String>());
+//            REGISTERS.get(USE_QUEUE.get(0)).add(src);
+//            USE_QUEUE.add(USE_QUEUE.get(0));
+//            USE_QUEUE.remove(0);
+            return "R" + USE_QUEUE.get(0);
         }
 
         return ""; // default for compilation, should not be in your code!!
