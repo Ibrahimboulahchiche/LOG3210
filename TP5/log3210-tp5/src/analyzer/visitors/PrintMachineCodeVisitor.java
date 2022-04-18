@@ -277,6 +277,9 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         // Attention de voir s'il faut faire un ST ou non... (ST si c'est une variable vive)
 
         for (int i = 0; i < REGISTERS.size(); i++) {
+            if (REGISTERS.get(i).contains(assigned)) {
+                REGISTERS.get(i).remove(assigned);
+            }
             if (REGISTERS.get(i).contains(src)){
                 REGISTERS.get(i).remove(src);
                 setReg(assigned, i);
