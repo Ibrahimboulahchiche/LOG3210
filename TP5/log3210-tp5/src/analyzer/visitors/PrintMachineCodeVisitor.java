@@ -151,17 +151,19 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
                 rightAlreadyUsed = true;
             }
         }
-        if (!MODIFIED.contains(assigned) && assigned.charAt(0) != 't') {
-            MODIFIED.add(assigned);
-        if (right.charAt(0) != 't' && !rightAlreadyUsed)
-            m_writer.println("LD " + getReg(right, NODE, IN) + ", " + right);
-        if (left.charAt(0) != 't' && !leftAlreadyUsed)
-            m_writer.println("LD " + getReg(left, NODE, IN) + ", " + left);
-        m_writer.println(opName + " " + getReg(assigned, NODE, IN) + ", " + getReg(left, NODE, IN) + ", " + getReg(right, NODE, IN));
 
-//            m_writer.println("ST" + REGISTERS.get(i) + ", R" + i);
+        if (!MODIFIED.contains(assigned) /*&& assigned.charAt(0) != 't'*/) {
+            MODIFIED.add(assigned);
+            if (right.charAt(0) != 't' && !rightAlreadyUsed)
+                m_writer.println("LD " + getReg(right, NODE, IN) + ", " + right);
+            if (left.charAt(0) != 't' && !leftAlreadyUsed)
+                m_writer.println("LD " + getReg(left, NODE, IN) + ", " + left);
+            m_writer.println(opName + " " + getReg(assigned, NODE, IN) + ", " + getReg(left, NODE, IN) + ", " + getReg(right, NODE, IN));
+
+//            m_writer.println("ST " + REGISTERS.get(i) + ", R" + i);
 //            m_writer.println("ST " + assigned + ", " + getReg(left, NODE, IN));
         }
+        //System.out.println(left + " " + right);
         // TODO: Si une variable n'est pas vive, ne l'enregistrez pas en mémoire.
         // TODO: Si vos registres sont pleins, déterminez quelle variable vous allez retirer et si vous devez la sauvegarder
         // TODO: Écrivez la traduction en code machine, une instruction intermédiaire peut générer plus qu'une instruction machine
@@ -177,7 +179,7 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         String assigned = (String) node.jjtGetChild(0).jjtAccept(this, null);
         String left = (String) node.jjtGetChild(1).jjtAccept(this, null);
 
-        // TODO: même chose que ASTAssignStmt mais on aura toujours une expression 
+        // TODO: même chose que ASTAssignStmt mais on aura toujours une expression
         // du type "MIN #0, R*". Veuillez gérer ce cas aussi.
         return null;
     }
@@ -188,6 +190,11 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         // On n'a rien a transférer aux enfants
         String assigned = (String) node.jjtGetChild(0).jjtAccept(this, null);
         String left = (String) node.jjtGetChild(1).jjtAccept(this, null);
+
+        System.out.println(assigned + " " + left);
+        if(!OUT.contains(left)){
+            removeReg(left, assigned);
+        }
 
         // Lors d'une assignation directe, le registre de left est partagé avec 
         // assigned. Si left n'est plus une variable vive dans out, on peut
@@ -265,13 +272,20 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         return ""; // default for compilation, should not be in your code!!
     }
 
-    public void removeReg(String src) {
+    public void removeReg(String src, String assigned) {
         // TODO : enlève une string du registers
         // Attention de voir s'il faut faire un ST ou non... (ST si c'est une variable vive)
 
-
-        // TODO: Si variable non temporaire (commence pas par t) --> ST
-        REGISTERS.remove(src);
+        for (int i = 0; i < REGISTERS.size(); i++) {
+            if (REGISTERS.get(i).contains(src)){
+                REGISTERS.get(i).remove(src);
+                setReg(assigned, i);
+                if(!(assigned.charAt(0) == 't')){
+                    m_writer.println("ST " + assigned + ", " + getReg(assigned, NODE, IN));
+                }
+                return;
+            }
+        }
     }
 
 }
